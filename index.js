@@ -129,6 +129,8 @@ else if (msg.includes("thank")) {
   res.json({ reply });
 });
 
-app.listen(3000, () => {
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
   console.log("FK Bot running on port 3000");
 });
