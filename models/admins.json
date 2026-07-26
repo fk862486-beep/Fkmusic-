@@ -1,0 +1,12 @@
+{
+  "admins": [
+    {
+      "name": "Faizan",
+      "id": "OWNER001"
+    },
+    {
+      "name": "Admin",
+      "id": "test123"
+    }
+  ]
+}

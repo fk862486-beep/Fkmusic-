@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FK AI Control Center</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">
+🤖 FK AI
+</div>
+
+<div class="menu">
+<a href="/admin">🏠 Dashboard</a>
+<a href="#">🤖 AI Control</a>
+<a href="#">🎵 Music</a>
+<a href="#">👥 Members</a>
+<a href="#">🛡 Admins</a>
+<a href="#">📊 Analytics</a>
+<a href="#">⚙ Settings</a>
+<a href="/logout">🚪 Logout</a>
+</div>
+
+</div>
+
+
+<div class="main">
+
+<h1>FK AI Control Center</h1>
+<p>
+👤 <%= user || "Admin" %>
+|
+👑 <%= role || "ADMIN" %>
+</p>
+
+<div class="cards">
+
+
+<div class="card">
+<h2>🤖 Bot Status</h2>
+<p class="status">
+🤖 <%= botStatus %>
+</p>
+</div>
+
+
+<div class="card">
+<h2>🎵 Music</h2>
+
+<p>
+Status: 🎵 <%= musicStatus %>
+</p>
+
+<p>
+🎧 Current Song:
+<%= music.currentSong %>
+</p>
+
+<p>
+📃 Queue:
+</p>
+
+<ul>
+<% music.queue.forEach(function(song){ %>
+
+<li>
+🎵 <%= song %>
+</li>
+
+<% }) %>
+</ul>
+
+</div>
+
+
+<div class="card">
+<h2>👥 Members</h2>
+<p>
+<%= totalUsers %> Members
+</p>
+
+<ul>
+<% users.forEach(function(user){ %>
+
+<li>
+👤 <%= user %>
+</li>
+
+<% }) %>
+</ul>
+
+</div>
+
+
+<div class="card">
+<h2>📊 Analytics</h2>
+<p>
+Coming Soon
+</p>
+</div>
+
+
+
+<div class="card">
+
+<h2>🤖 FK AI Control</h2>
+
+<a href="/control/ai-on">
+<button>✅ AI ON</button>
+</a>
+
+<a href="/control/ai-off">
+<button>❌ AI OFF</button>
+</a>
+
+
+<br><br>
+
+
+<a href="/control/music-on">
+<button>🎵 Music ON</button>
+</a>
+
+<a href="/control/music-off">
+<button>🔇 Music OFF</button>
+</a>
+
+</div>
+
+
+
+<div class="card">
+
+<h2>💬 Chat History</h2>
+
+
+<% if(chats && chats.length > 0){ %>
+
+
+<% chats.forEach(function(chat){ %>
+
+<div class="chat-box">
+
+<p>
+👤 <%= chat.name %>
+</p>
+
+<p>
+💬 <%= chat.message %>
+</p>
+
+<p>
+🤖 <%= chat.reply %>
+</p>
+
+<p>
+🕒 <%= chat.time %>
+</p>
+
+
+</div>
+
+<hr>
+
+
+<% }) %>
+
+
+<% } else { %>
+
+<p>No Chat History</p>
+
+<% } %>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+</body>
+</html>

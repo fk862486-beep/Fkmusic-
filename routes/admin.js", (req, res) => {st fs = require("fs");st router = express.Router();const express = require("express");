@@ -1,0 +1,12 @@
+nc("db.json")) {
+    users = JSON.parse(fs.readFileSync("db.json")).users || [];
+  }
+
+  res.render("admin/dashboard", {
+    users: users,
+    totalUsers: users.length
+  });
+
+});
+
+module.exports = router;

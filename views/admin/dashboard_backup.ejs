@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FK AI Admin Panel</title>
+<link rel="stylesheet" href="/css/style.css">	
+
+</head>
+<body>
+
+<h1>🤖 FK AI Admin Dashboard</h1>
+
+<h3>Bot Status: ✅ Online</h3>
+
+<hr>
+
+<h2>🎛️ Controls</h2>
+
+<a href="/control/ai-on">
+  <button>🤖 AI ON</button>
+</a>
+
+<a href="/control/ai-off">
+  <button>🤖 AI OFF</button>
+</a>
+
+<br><br>
+
+<a href="/control/music-on">
+  <button>🎵 Music ON</button>
+</a>
+
+<a href="/control/music-off">
+  <button>🎵 Music OFF</button>
+</a>
+
+<hr>
+
+<h2>💬 Commands</h2>
+<p>/help</p>
+<p>/rules</p>
+<p>/music</p>
+
+<hr>
+
+<h2>👥 Users</h2>
+
+<p>Total Users: <%= totalUsers %></p>
+
+<ul>
+<% users.forEach(user => { %>
+  <li>👤 <%= user %></li>
+<% }) %>
+</ul>
+<hr>
+
+<h2>💬 Chat History</h2>
+
+<% if (chats.length === 0) { %>
+  <p>No chats yet...</p>
+<% } else { %>
+
+<ul>
+<% chats.forEach(chat => { %>
+  <li>
+    👤 <%= chat.name %> :
+    <%= chat.message %>
+    <br>
+    🤖 Bot: <%= chat.reply %>
+    <br>
+    🕒 <%= chat.time %>
+  </li>
+  <br>
+<% }) %>
+</ul>
+
+<% } %>
+</body>
+</html>

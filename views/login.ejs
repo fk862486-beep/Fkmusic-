@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>FK AI Login</title>
+
+<link rel="stylesheet" href="/css/style.css">
+
+<style>
+
+body{
+    background:#111827;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:Arial;
+}
+
+
+.login-box{
+
+    background:#1f2937;
+    padding:35px;
+    width:320px;
+    border-radius:15px;
+    text-align:center;
+    box-shadow:0 0 20px #000;
+
+}
+
+
+.logo{
+
+    font-size:35px;
+    margin-bottom:10px;
+
+}
+
+
+h1{
+
+    color:white;
+
+}
+
+
+input{
+
+    width:90%;
+    padding:12px;
+    margin:10px;
+    border-radius:8px;
+    border:none;
+
+}
+
+
+button{
+
+    width:95%;
+    padding:12px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+
+}
+
+
+button:hover{
+
+    background:#1d4ed8;
+
+}
+
+
+p{
+
+    color:#9ca3af;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="login-box">
+
+
+<div class="logo">
+🤖
+</div>
+
+
+<h1>
+FK AI Admin
+</h1>
+
+
+<p>
+Control Center Login
+</p>
+
+
+<form method="POST" action="/login">
+
+
+<input 
+type="text" 
+name="username"
+placeholder="Username"
+required>
+
+
+<input 
+type="password"
+name="password"
+placeholder="Password"
+required>
+
+
+<button>
+🔐 Login
+</button>
+
+
+</form>
+
+
+</div>
+
+
+</body>
+</html>

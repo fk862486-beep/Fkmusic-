@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FK AI Control Center</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">
+🤖 FK AI
+</div>
+
+<div class="menu">
+<a href="/admin">🏠 Dashboard</a>
+<a href="#">🤖 AI Control</a>
+<a href="#">🎵 Music</a>
+<a href="#">👥 Members</a>
+<a href="#">🛡 Admins</a>
+<a href="#">📊 Analytics</a>
+<a href="#">⚙ Settings</a>
+<a href="/logout">🚪 Logout</a>
+</div>
+
+</div>
+
+<div class="main">
+
+<h1>FK AI Control Center</h1>
+
+<div class="cards">
+
+<div class="card">
+<h2>🤖 Bot</h2>
+<p class="status">🟢 Online</p>
+</div>
+
+<div class="card">
+<h2>🎵 Music</h2>
+<p>Ready</p>
+</div>
+
+<div class="card">
+<h2>👥 Members</h2>
+<p>0 Online</p>
+</div>
+
+<div class="card">
+<h2>📊 Analytics</h2>
+<p>Coming Soon</p>
+
+<div class="card">
+<h2>🤖 FK AI Control</h2>
+
+<button>✅ AI ON</button>
+<button>❌ AI OFF</button>
+
+<br><br>
+
+<button>🎵 Music ON</button>
+<button>🔇 Music OFF</button>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
+
+

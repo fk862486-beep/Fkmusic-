@@ -1,0 +1,38 @@
+const express = require("express");
+const router = express.Router();
+
+let botStatus = "ON";
+let musicStatus = "OFF";
+
+global.botEnabled = true;
+
+router.get("/control/status", (req, res) => {
+  res.json({
+    bot: botStatus,
+    music: musicStatus
+  });
+});
+
+router.get("/control/ai-on", (req, res) => {
+  botStatus = "ON";
+  global.botEnabled = true;
+  res.send("🤖 AI Bot ON");
+});
+
+router.get("/control/ai-off", (req, res) => {
+  botStatus = "OFF";
+  global.botEnabled = false;
+  res.send("🤖 AI Bot OFF");
+});
+
+router.get("/control/music-on", (req, res) => {
+  musicStatus = "ON";
+  res.send("🎵 Music ON");
+});
+
+router.get("/control/music-off", (req, res) => {
+  musicStatus = "OFF";
+  res.send("🎵 Music OFF");
+});
+
+module.exports = router;
