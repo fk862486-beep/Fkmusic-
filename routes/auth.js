@@ -53,5 +53,26 @@ router.get("/logout",(req,res)=>{
 
 });
 
+const passport = require("../config/passport");
+
+// Facebook Login
+router.get(
+  "/auth/facebook",
+  passport.authenticate("facebook", { scope: ["email"] })
+);
+
+// Facebook Callback
+router.get(
+  "/auth/facebook/callback",
+  passport.authenticate("facebook", {
+    failureRedirect: "/login"
+  }),
+  (req, res) => {
+    req.session.loggedIn = true;
+    req.session.user = req.user.displayName;
+    req.session.role = "FACEBOOK";
+    res.redirect("/admin");
+  }
+);
 
 module.exports = router;

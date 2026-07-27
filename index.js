@@ -1,4 +1,9 @@
 require("dotenv").config();
+
+const FB_APP_ID = process.env.FACEBOOK_APP_ID;
+const FB_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+console.log("Facebook App ID:", FB_APP_ID); 
+
 const express = require("express");
 const session = require("express-session");
 const passport = require("./config/passport");
