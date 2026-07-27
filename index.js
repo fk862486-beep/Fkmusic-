@@ -27,11 +27,14 @@ app.use(express.static("public"));
 
 const adminRoute = require("./routes/admin");
 const authRoute = require("./routes/auth");
+const pagesRoute = require("./routes/pages");
 const controlRoute = require("./routes/control");
 
 app.use(adminRoute);
 app.use(authRoute);
+app.use(pagesRoute);
 app.use(controlRoute);
+
 
 global.botEnabled = true;
 global.musicEnabled = true;
