@@ -58,7 +58,7 @@ const passport = require("../config/passport");
 // Facebook Login
 router.get(
   "/auth/facebook",
-  passport.authenticate("facebook", { scope: ["email"] })
+  passport.authenticate("facebook")
 );
 
 // Facebook Callback
