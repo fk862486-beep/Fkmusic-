@@ -25,6 +25,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+app.get("/privacy", (req, res) => {
+  res.send("<h1>Privacy Policy</h1><p>Your email and public profile are used for login.</p>");
+});
+
+app.get("/data-deletion", (req, res) => {
+  res.send("<h1>User Data Deletion</h1><p>To delete your data, contact us at mashalkf2030@gmail.com or delete your Facebook account.</p>");
+});
+
 const adminRoute = require("./routes/admin");
 const authRoute = require("./routes/auth");
 const pagesRoute = require("./routes/pages");
