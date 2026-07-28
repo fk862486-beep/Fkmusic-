@@ -54,8 +54,8 @@ app.post("/chat", (req, res) => {
 
   if (!global.botEnabled) {
     return res.json({
-      reply: "🤖 Bot is OFF"
-    });
+  reply: "🤖 Bot is OFF"
+});
   }
 
   let name = req.body.name || "Guest";
