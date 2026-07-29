@@ -33,6 +33,57 @@ app.get("/data-deletion", (req, res) => {
   res.send("<h1>User Data Deletion</h1><p>To delete your data, contact us at mashalkf2030@gmail.com or delete your Facebook account.</p>");
 });
 
+app.get('/test-ludo-token', async (req, res) => {
+  const token = req.query.token;
+  
+  if (!token) {
+    return res.send('❌ Token missing. Add ?token=YOUR_TOKEN to URL');
+  }
+
+  try {
+    // Step 1: Verify token with Facebook Graph API
+    const verifyRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`);
+    const userData = await verifyRes.json();
+
+    if (userData.error) {
+      return res.send(`
+        <h2>❌ Token Invalid</h2>
+        <p><b>Error:</b> ${userData.error.message}</p>
+        <p><b>Type:</b> ${userData.error.type}</p>
+        <p><b>Code:</b> ${userData.error.code}</p>
+      `);
+    }
+
+    // Step 2: Get token debug info
+    const debugRes = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${process.env.FB_CLIENT_ID}|${process.env.FB_CLIENT_SECRET}`);
+    const debugData = await debugRes.json();
+
+    res.send(`
+      <h2>✅ Token Valid!</h2>
+      <h3>Facebook User Info:</h3>
+      <ul>
+        <li><b>Name:</b> ${userData.name}</li>
+        <li><b>ID:</b> ${userData.id}</li>
+        <li><b>Email:</b> ${userData.email || 'N/A'}</li>
+      </ul>
+      <h3>Token Details:</h3>
+      <ul>
+        <li><b>App ID:</b> ${debugData.data?.app_id}</li>
+        <li><b>Valid:</b> ${debugData.data?.is_valid}</li>
+        <li><b>Expires:</b> ${debugData.data?.expires_at ? new Date(debugData.data.expires_at * 1000).toLocaleString() : 'Never'}</li>
+        <li><b>Scopes:</b> ${debugData.data?.scopes?.join(', ')}</li>
+      </ul>
+      <h3>Raw Token (first 30 chars):</h3>
+      <code>${token.substring(0, 30)}...</code>
+      <hr>
+      <p>✅ Ye token Ludo Star auth me use ho sakta hai.</p>
+    `);
+
+  } catch (err) {
+    res.send(`<h2>❌ Server Error</h2><p>${err.message}</p>`);
+  }
+});
+
 const adminRoute = require("./routes/admin");
 const authRoute = require("./routes/auth");
 const pagesRoute = require("./routes/pages");
