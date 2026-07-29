@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+
 const app = express();
 
 app.use(express.json());
@@ -268,55 +269,45 @@ app.get('/admin/logs', (req, res) => {
     res.json({ logs: [] });
 });
 
-// Test Ludo Star token endpoint
+// Facebook Token Test
 app.get('/test-ludo-token', async (req, res) => {
-    const token = req.query.token || process.env.FB_ACCESS_TOKEN;
-    
+
+    const token = req.query.token || config.fbToken;
+
     if (!token) {
-        return res.status(400).json({ 
-            error: 'Token missing',
-            usage: '/test-ludo-token?token=YOUR_FB_TOKEN'
+        return res.status(400).json({
+            error: "Token missing"
         });
     }
-    
+
     try {
-        // Step 1: Facebook token verify karo
-        const fbResponse = await fetch(`https://graph.facebook.com/me?access_token=${token}&fields=id,name`);
+
+        const fbUrl = `https://graph.facebook.com/me?access_token=${token}&fields=id,name,email`;
+
+        const fbResponse = await fetch(fbUrl);
         const fbData = await fbResponse.json();
-        
+
         if (fbData.error) {
-            return res.status(401).json({ 
-                stage: 'Facebook validation failed',
-                error: fbData.error 
+            return res.status(401).json({
+                stage: "facebook_validation",
+                error: fbData.error
             });
         }
-        
-        // Step 2: Ludo Star API test
-        const ludoResponse = await fetch('https://api.ludostar.com/api/v1/auth/facebook', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                access_token: token,
-                fb_id: fbData.id,
-                platform: 'android',
-                app_version: '1.0.0'
-            })
-        });
-        
-        const ludoData = await ludoResponse.json();
-        
+
         res.json({
             success: true,
-            facebook: {
-                id: fbData.id,
-                name: fbData.name
-            },
-            ludo_response: ludoData
+            message: "Facebook token is valid",
+            user: fbData
         });
-        
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+
+        res.status(500).json({
+            error: err.message
+        });
+
     }
+
 });
 
 const PORT = process.env.PORT || 3000;
