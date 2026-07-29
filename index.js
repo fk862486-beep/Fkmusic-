@@ -1,205 +1,272 @@
-require("dotenv").config();
-
-const FB_APP_ID = process.env.FACEBOOK_APP_ID;
-const FB_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
-console.log("Facebook App ID:", FB_APP_ID); 
-
-const express = require("express");
-const session = require("express-session");
-const passport = require("./config/passport");
-const fs = require("fs");
-
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const app = express();
-app.use(session({
-  secret: "fk-secret-key",
-  resave: false,
-  saveUninitialized: false
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-app.set("view engine", "ejs");
-app.set("views", "./views");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
 
-app.get("/privacy", (req, res) => {
-  res.send("<h1>Privacy Policy</h1><p>Your email and public profile are used for login.</p>");
-});
+// Config file path
+const CONFIG_FILE = './config.json';
 
-app.get("/data-deletion", (req, res) => {
-  res.send("<h1>User Data Deletion</h1><p>To delete your data, contact us at mashalkf2030@gmail.com or delete your Facebook account.</p>");
-});
+// Default config
+let config = {
+    fbToken: '',
+    fbAppId: '1525523458793649',
+    ludoServerUrl: '',
+    ludoServerPort: '',
+    botStatus: 'stopped',
+    autoReconnect: true,
+    lastUpdated: null
+};
 
-app.get('/test-ludo-token', async (req, res) =>
- {
+// Load config on startup
+if (fs.existsSync(CONFIG_FILE)) {
+    config = { ...config, ...JSON.parse(fs.readFileSync(CONFIG_FILE)) };
+}
 
-  const token = req.query.token;
-  
-  if (!token) {
-    return res.send('❌ Token missing. Add ?token=YOUR_TOKEN to URL');
-  }
+// Save config function
+function saveConfig() {
+    config.lastUpdated = new Date().toISOString();
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+}
 
-  try {
-    // Step 1: Verify token with Facebook Graph API
-    const verifyRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`);
-    const userData = await verifyRes.json();
-
-    if (userData.error) {
-      return res.send(`
-        <h2>❌ Token Invalid</h2>
-        <p><b>Error:</b> ${userData.error.message}</p>
-        <p><b>Type:</b> ${userData.error.type}</p>
-        <p><b>Code:</b> ${userData.error.code}</p>
-      `);
-    }
-
-    // Step 2: Get token debug info
-    const debugRes = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${process.env.FB_CLIENT_ID}|${process.env.FB_CLIENT_SECRET}`);
-    const debugData = await debugRes.json();
-
+// ===== ADMIN PANEL ROUTE =====
+app.get('/admin', (req, res) => {
     res.send(`
-      <h2>✅ Token Valid!</h2>
-      <h3>Facebook User Info:</h3>
-      <ul>
-        <li><b>Name:</b> ${userData.name}</li>
-        <li><b>ID:</b> ${userData.id}</li>
-        <li><b>Email:</b> ${userData.email || 'N/A'}</li>
-      </ul>
-      <h3>Token Details:</h3>
-      <ul>
-        <li><b>App ID:</b> ${debugData.data?.app_id}</li>
-        <li><b>Valid:</b> ${debugData.data?.is_valid}</li>
-        <li><b>Expires:</b> ${debugData.data?.expires_at ? new Date(debugData.data.expires_at * 1000).toLocaleString() : 'Never'}</li>
-        <li><b>Scopes:</b> ${debugData.data?.scopes?.join(', ')}</li>
-      </ul>
-      <h3>Raw Token (first 30 chars):</h3>
-      <code>${token.substring(0, 30)}...</code>
-      <hr>
-      <p>✅ Ye token Ludo Star auth me use ho sakta hai.</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FK AI Bot Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        body { background: #1a1a2e; color: #eee; padding: 20px; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #00d4ff; margin-bottom: 20px; text-align: center; }
+        .card { background: #16213e; border-radius: 10px; padding: 20px; margin-bottom: 15px; border: 1px solid #0f3460; }
+        .card h2 { color: #00d4ff; margin-bottom: 15px; font-size: 18px; }
+        .status { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        .status.running { background: #00c853; color: white; }
+        .status.stopped { background: #d32f2f; color: white; }
+        label { display: block; margin: 10px 0 5px; color: #b0b0b0; font-size: 14px; }
+        input, textarea { width: 100%; padding: 10px; background: #0f3460; border: 1px solid #1a4d7a; color: white; border-radius: 5px; font-size: 14px; }
+        button { background: #00d4ff; color: #1a1a2e; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px 5px 5px 0; font-size: 14px; }
+        button:hover { background: #00b8e6; }
+        button.danger { background: #d32f2f; color: white; }
+        button.success { background: #00c853; color: white; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .info { background: #0f3460; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 13px; word-break: break-all; }
+        .toggle { display: flex; align-items: center; gap: 10px; }
+        #logs { background: #000; color: #0f0; padding: 10px; border-radius: 5px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 FK AI Bot Admin Panel</h1>
+        
+        <div class="card">
+            <h2>📊 Bot Status</h2>
+            <p>Status: <span class="status ${config.botStatus}" id="botStatus">${config.botStatus.toUpperCase()}</span></p>
+            <p style="margin-top: 10px;">Last Updated: ${config.lastUpdated || 'Never'}</p>
+            <div class="row" style="margin-top: 15px;">
+                <button class="success" onclick="startBot()">▶ Start Bot</button>
+                <button class="danger" onclick="stopBot()">■ Stop Bot</button>
+                <button onclick="restartBot()">↻ Restart</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔑 Facebook Settings</h2>
+            <label>App ID</label>
+            <input type="text" id="fbAppId" value="${config.fbAppId}" />
+            
+            <label>Access Token</label>
+            <textarea id="fbToken" rows="4">${config.fbToken}</textarea>
+            
+            <div class="row" style="margin-top: 10px;">
+                <button onclick="saveFacebook()">💾 Save Token</button>
+                <button onclick="testToken()">🧪 Test Token</button>
+            </div>
+            <div class="info" id="fbResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>🎮 Ludo Server Settings</h2>
+            <label>Server URL / IP</label>
+            <input type="text" id="ludoUrl" value="${config.ludoServerUrl}" placeholder="e.g., ludo.example.com" />
+            
+            <label>Port</label>
+            <input type="text" id="ludoPort" value="${config.ludoServerPort}" placeholder="e.g., 8080" />
+            
+            <div class="row" style="margin-top: 10px;">
+                <button onclick="saveLudo()">💾 Save Ludo Config</button>
+                <button onclick="testLudo()">🔌 Test Connection</button>
+            </div>
+            <div class="info" id="ludoResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ General Settings</h2>
+            <div class="toggle">
+                <input type="checkbox" id="autoReconnect" ${config.autoReconnect ? 'checked' : ''} style="width: auto;" />
+                <label style="margin: 0;">Auto Reconnect on Disconnect</label>
+            </div>
+            <button onclick="saveSettings()" style="margin-top: 15px;">💾 Save Settings</button>
+        </div>
+
+        <div class="card">
+            <h2>📜 Live Logs</h2>
+            <div id="logs">Waiting for logs...</div>
+            <button onclick="clearLogs()" style="margin-top: 10px;">🗑 Clear Logs</button>
+        </div>
+    </div>
+
+    <script>
+        async function apiCall(endpoint, data = null) {
+            const opts = { method: data ? 'POST' : 'GET' };
+            if (data) {
+                opts.headers = { 'Content-Type': 'application/json' };
+                opts.body = JSON.stringify(data);
+            }
+            const res = await fetch(endpoint, opts);
+            return await res.json();
+        }
+
+        async function saveFacebook() {
+            const result = await apiCall('/admin/save-facebook', {
+                fbAppId: document.getElementById('fbAppId').value,
+                fbToken: document.getElementById('fbToken').value
+            });
+            document.getElementById('fbResult').innerText = result.message;
+        }
+
+        async function testToken() {
+            document.getElementById('fbResult').innerText = 'Testing...';
+            const token = document.getElementById('fbToken').value;
+            const result = await apiCall('/test-ludo-token?token=' + encodeURIComponent(token));
+            document.getElementById('fbResult').innerText = JSON.stringify(result, null, 2);
+        }
+
+        async function saveLudo() {
+            const result = await apiCall('/admin/save-ludo', {
+                ludoServerUrl: document.getElementById('ludoUrl').value,
+                ludoServerPort: document.getElementById('ludoPort').value
+            });
+            document.getElementById('ludoResult').innerText = result.message;
+        }
+
+        async function testLudo() {
+            document.getElementById('ludoResult').innerText = 'Connecting...';
+            const result = await apiCall('/admin/test-ludo');
+            document.getElementById('ludoResult').innerText = result.message;
+        }
+
+        async function saveSettings() {
+            const result = await apiCall('/admin/save-settings', {
+                autoReconnect: document.getElementById('autoReconnect').checked
+            });
+            alert(result.message);
+        }
+
+        async function startBot() {
+            const result = await apiCall('/admin/start-bot', {});
+            document.getElementById('botStatus').innerText = 'RUNNING';
+            document.getElementById('botStatus').className = 'status running';
+            addLog('Bot started');
+        }
+
+        async function stopBot() {
+            const result = await apiCall('/admin/stop-bot', {});
+            document.getElementById('botStatus').innerText = 'STOPPED';
+            document.getElementById('botStatus').className = 'status stopped';
+            addLog('Bot stopped');
+        }
+
+        async function restartBot() {
+            await stopBot();
+            setTimeout(startBot, 1000);
+        }
+
+        function addLog(msg) {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            logs.innerHTML += '[' + time + '] ' + msg + '\\n';
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        // Fetch logs every 3 seconds
+        setInterval(async () => {
+            try {
+                const result = await apiCall('/admin/logs');
+                if (result.logs && result.logs.length) {
+                    result.logs.forEach(log => addLog(log));
+                }
+            } catch(e) {}
+        }, 3000);
+    </script>
+</body>
+</html>
     `);
-
-  } catch (err) {
-    res.send(`<h2>❌ Server Error</h2><p>${err.message}</p>`);
-  }
 });
 
-const adminRoute = require("./routes/admin");
-const authRoute = require("./routes/auth");
-const pagesRoute = require("./routes/pages");
-const controlRoute = require("./routes/control");
+// ===== ADMIN API ROUTES =====
 
-app.use(adminRoute);
-app.use(authRoute);
-app.use(pagesRoute);
-app.use(controlRoute);
-
-
-global.botEnabled = true;
-global.musicEnabled = true;
-global.chats = [];
-
-let users = [];
-
-if (fs.existsSync("db.json")) {
-  users = JSON.parse(fs.readFileSync("db.json")).users || [];
-}
-
-app.get("/", (req, res) => {
-  res.send("FK AI Bot is Running 🤖");
+app.post('/admin/save-facebook', (req, res) => {
+    config.fbAppId = req.body.fbAppId;
+    config.fbToken = req.body.fbToken;
+    saveConfig();
+    res.json({ status: 'ok', message: '✅ Facebook settings saved!' });
 });
 
-app.post("/chat", (req, res) => {
-
-  if (!global.botEnabled) {
-    return res.json({
-  reply: "🤖 Bot is OFF"
+app.post('/admin/save-ludo', (req, res) => {
+    config.ludoServerUrl = req.body.ludoServerUrl;
+    config.ludoServerPort = req.body.ludoServerPort;
+    saveConfig();
+    res.json({ status: 'ok', message: '✅ Ludo server settings saved!' });
 });
-  }
 
-  let name = req.body.name || "Guest";
-  let msg = (req.body.message || "").toLowerCase();
+app.post('/admin/save-settings', (req, res) => {
+    config.autoReconnect = req.body.autoReconnect;
+    saveConfig();
+    res.json({ status: 'ok', message: '✅ Settings saved!' });
+});
 
-  if (!users.includes(name)) {
-    users.push(name);
+app.post('/admin/start-bot', (req, res) => {
+    config.botStatus = 'running';
+    saveConfig();
+    // TODO: Yahan actual bot start logic aayega
+    res.json({ status: 'ok', message: 'Bot started' });
+});
 
-    global.chats.push({
-      name: "FK AI Bot",
-      message: "New User Joined",
-      reply: `👋 Welcome ${name}! FK AI Bot me khush aamdeed 🤖`,
-      time: new Date().toLocaleString()
-    });
+app.post('/admin/stop-bot', (req, res) => {
+    config.botStatus = 'stopped';
+    saveConfig();
+    // TODO: Yahan actual bot stop logic aayega
+    res.json({ status: 'ok', message: 'Bot stopped' });
+});
 
-    fs.writeFileSync(
-      "db.json",
-      JSON.stringify({ users }, null, 2)
-    );
-  }
+app.get('/admin/test-ludo', async (req, res) => {
+    if (!config.ludoServerUrl) {
+        return res.json({ message: '❌ Ludo server URL not set' });
+    }
+    try {
+        const url = `http://${config.ludoServerUrl}:${config.ludoServerPort || 80}`;
+        const response = await fetch(url, { method: 'GET' });
+        res.json({ message: `✅ Connected! Status: ${response.status}` });
+    } catch (err) {
+        res.json({ message: `❌ Connection failed: ${err.message}` });
+    }
+});
 
-const handleCommand = require("./controllers/commands");
-
-const fs = require("fs");
-
-function isAdmin(name){
-  if (!fs.existsSync("models/admins.json")) return false;
-
-  let data = JSON.parse(
-    fs.readFileSync("models/admins.json")
-  );
-
-  return data.admins.some(
-    admin => admin.name === name || admin.id === name
-  );
-}
-
-  let reply = "Mujhe samajh nahi aya 🤖";
-
-if (msg.startsWith("/ma") || msg.startsWith("/rma")) {
-
-  if (isAdmin(name)) {
-    reply = handleCommand(msg);
-  } else {
-    reply = "❌ Admin permission required";
-  }
-
-}
-else if (msg.startsWith("/")){
-
-  reply = handleCommand(msg, name);
-}
-
-if (!msg.startsWith("/") && (msg.includes("hello") || msg.includes("hi") || msg.includes("salam"))) {
-  reply = `👋 Hello ${name}! FK AI Bot me khush aamdeed 🤖`;
-}
-else if (!msg.startsWith("/") && msg.includes("name")) {
-  reply = `Aap ka naam ${name} hai 👤`;
-}
-else if (msg.includes("status")) {
-  reply = `🤖 AI: ${global.botEnabled ? "ON" : "OFF"} | 🎵 Music: ${global.musicEnabled ? "ON" : "OFF"}`;
-}
-else if (msg.includes("thank")) {
-  reply = "Welcome 😊 FK AI hamesha aapki help ke liye ready hai.";
-}
-
-  
-  else if (!msg.startsWith("/")) {
-  reply = `Hello ${name}, aap ne kaha: ${msg}`;
-}    
-
-  global.chats.push({
-    name: name,
-    message: msg,
-    reply: reply,
-    time: new Date().toLocaleString()
-  });
-
-  res.json({ reply });
+app.get('/admin/logs', (req, res) => {
+    // Simple in-memory logs (production me proper logging use karo)
+    res.json({ logs: [] });
 });
 
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("FK Bot running on port 3000");
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
